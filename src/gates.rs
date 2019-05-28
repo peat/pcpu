@@ -86,7 +86,7 @@ impl Logic {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Gate {
     pub logic: Logic,
     pub a: Voltage,

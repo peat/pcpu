@@ -1,29 +1,17 @@
 use crate::circuits::*;
-use crate::gates::{Gate, Logic, Voltage};
+use crate::gates::*;
 
 mod circuits;
 mod gates;
 
 fn main() {
-    let mut ha = HalfAdder::new();
+    let mut rca = RippleCarryAdder::new(4);
 
-    ha.a = Voltage::Low;
-    ha.b = Voltage::Low;
-    ha.exec();
-    println!("{:?}", ha);
+    println!("{:?}\n", rca);
 
-    ha.a = Voltage::High;
-    ha.b = Voltage::Low;
-    ha.exec();
-    println!("{:?}", ha);
+    rca.a = vec![Voltage::Low, Voltage::High, Voltage::Low, Voltage::High];
+    rca.b = vec![Voltage::Low, Voltage::High, Voltage::Low, Voltage::Low];
+    rca.exec();
+    println!("{:?}\n", rca);
 
-    ha.a = Voltage::Low;
-    ha.b = Voltage::High;
-    ha.exec();
-    println!("{:?}", ha);
-
-    ha.a = Voltage::High;
-    ha.b = Voltage::High;
-    ha.exec();
-    println!("{:?}", ha);
 }
