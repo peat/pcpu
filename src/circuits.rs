@@ -2,10 +2,10 @@ use crate::gates::*;
 
 #[derive(Debug, Clone)]
 pub struct HalfAdder {
-    pub a: Voltage,
-    pub b: Voltage,
-    pub sum: Voltage,
-    pub carry: Voltage,
+    pub a: bool,
+    pub b: bool,
+    pub sum: bool,
+    pub carry: bool,
     xor_gate: Gate,
     and_gate: Gate,
 }
@@ -14,10 +14,10 @@ impl HalfAdder {
     // initialize with inputs low
     pub fn new() -> Self {
         Self {
-            a: Voltage::Low,
-            b: Voltage::Low,
-            sum: Voltage::Low,
-            carry: Voltage::Low,
+            a: false,
+            b: false,
+            sum: false,
+            carry: false,
             xor_gate: Gate::new(Logic::XOR),
             and_gate: Gate::new(Logic::AND),
         }
@@ -33,11 +33,11 @@ impl HalfAdder {
 
 #[derive(Debug, Clone)]
 pub struct FullAdder {
-    pub a: Voltage,
-    pub b: Voltage,
-    pub sum: Voltage,
-    pub carry_in: Voltage,
-    pub carry_out: Voltage,
+    pub a: bool,
+    pub b: bool,
+    pub sum: bool,
+    pub carry_in: bool,
+    pub carry_out: bool,
     half_adder_a: HalfAdder,
     half_adder_b: HalfAdder,
     or_gate: Gate,
@@ -47,11 +47,11 @@ impl FullAdder {
     // initialize with inputs low
     pub fn new() -> Self {
         Self {
-            a: Voltage::Low,
-            b: Voltage::Low,
-            sum: Voltage::Low,
-            carry_in: Voltage::Low,
-            carry_out: Voltage::Low,
+            a: false,
+            b: false,
+            sum: false,
+            carry_in: false,
+            carry_out: false,
             half_adder_a: HalfAdder::new(),
             half_adder_b: HalfAdder::new(),
             or_gate: Gate::new(Logic::OR),
@@ -82,26 +82,26 @@ impl FullAdder {
 
 #[derive(Debug)]
 pub struct RippleCarryAdder {
-    pub a: Vec<Voltage>,
-    pub b: Vec<Voltage>,
+    pub a: Vec<bool>,
+    pub b: Vec<bool>,
     pub full_adders: Vec<FullAdder>,
-    pub output: Vec<Voltage>,
+    pub output: Vec<bool>,
 }
 
 impl RippleCarryAdder {
     pub fn new(size: usize) -> Self {
         Self {
-            a: vec![Voltage::Low; size],
-            b: vec![Voltage::Low; size],
+            a: vec![false; size],
+            b: vec![false; size],
             full_adders: vec![FullAdder::new(); size],
-            output: vec![Voltage::Low; size],
+            output: vec![false; size],
         }
     }
 
     pub fn exec(&mut self) {
         self.output = vec![];
         let mut pairs = self.a.iter().zip(self.b.iter());
-        let mut carry = Voltage::Low;
+        let mut carry = false;
 
         for adder in self.full_adders.iter_mut() {
             if let Some((a_bit, b_bit)) = pairs.next() {

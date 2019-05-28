@@ -1,24 +1,4 @@
 #[derive(PartialEq, Clone, Copy, Debug)]
-pub enum Voltage {
-    High,
-    Low,
-}
-
-impl Voltage {
-    fn bool(self) -> bool {
-        self.high()
-    }
-
-    fn low(self) -> bool {
-        self == Voltage::Low
-    }
-
-    fn high(self) -> bool {
-        self == Voltage::High
-    }
-}
-
-#[derive(PartialEq, Clone, Copy, Debug)]
 pub enum Logic {
     NOT,
     AND,
@@ -30,7 +10,7 @@ pub enum Logic {
 }
 
 impl Logic {
-    pub fn exec(self, a: Voltage, b: Voltage) -> Voltage {
+    pub fn exec(self, a: bool, b: bool) -> bool {
         match self {
             Logic::NOT => Logic::not(a),
             Logic::AND => Logic::and(a, b),
@@ -42,46 +22,31 @@ impl Logic {
         }
     }
 
-    fn not(a: Voltage) -> Voltage {
-        match a {
-            Voltage::High => Voltage::Low,
-            Voltage::Low => Voltage::High,
-        }
+    fn not(a: bool) -> bool {
+        !a
     }
 
-    fn and(a: Voltage, b: Voltage) -> Voltage {
-        if a.high() && b.high() {
-            return Voltage::High;
-        }
-
-        Voltage::Low
+    fn and(a: bool, b: bool) -> bool {
+        a && b
     }
 
-    fn or(a: Voltage, b: Voltage) -> Voltage {
-        if a.low() && b.low() {
-            return Voltage::Low;
-        }
-
-        Voltage::High
+    fn or(a: bool, b: bool) -> bool {
+        a || b
     }
 
-    fn nand(a: Voltage, b: Voltage) -> Voltage {
+    fn nand(a: bool, b: bool) -> bool {
         Logic::not(Logic::and(a, b))
     }
 
-    fn nor(a: Voltage, b: Voltage) -> Voltage {
+    fn nor(a: bool, b: bool) -> bool {
         Logic::not(Logic::or(a, b))
     }
 
-    fn xor(a: Voltage, b: Voltage) -> Voltage {
-        if a != b {
-            return Voltage::High;
-        }
-
-        Voltage::Low
+    fn xor(a: bool, b: bool) -> bool {
+        a != b
     }
 
-    fn xnor(a: Voltage, b: Voltage) -> Voltage {
+    fn xnor(a: bool, b: bool) -> bool {
         Logic::not(Logic::xor(a, b))
     }
 }
@@ -89,16 +54,16 @@ impl Logic {
 #[derive(Debug, Clone)]
 pub struct Gate {
     pub logic: Logic,
-    pub a: Voltage,
-    pub b: Voltage,
-    pub output: Voltage,
+    pub a: bool,
+    pub b: bool,
+    pub output: bool,
 }
 
 impl Gate {
     // creates a new gate with the inputs set low
     pub fn new(logic: Logic) -> Gate {
-        let a = Voltage::Low;
-        let b = Voltage::Low;
+        let a = false;
+        let b = false;
 
         Self {
             logic,
@@ -108,7 +73,7 @@ impl Gate {
         }
     }
 
-    pub fn exec(&mut self, a: Voltage, b: Voltage) {
+    pub fn exec(&mut self, a: bool, b: bool) {
         self.a = a;
         self.b = b;
         self.output = self.logic.exec(a, b);
