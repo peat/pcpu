@@ -115,3 +115,124 @@ impl RippleCarryAdder {
         }
     }
 }
+
+#[derive(Debug, Clone)]
+pub struct HalfSubtractor {
+    pub a: bool,
+    pub b: bool,
+    pub difference: bool,
+    pub borrow: bool,
+    xor_gate: Gate,
+    not_gate: Gate,
+    and_gate: Gate,
+}
+
+impl HalfSubtractor {
+    // initialize with inputs low
+    pub fn new() -> Self {
+        Self {
+            a: false,
+            b: false,
+            difference: false,
+            borrow: false,
+            xor_gate: Gate::new(Logic::XOR),
+            not_gate: Gate::new(Logic::NOT),
+            and_gate: Gate::new(Logic::AND),
+        }
+    }
+
+    pub fn exec(&mut self) {
+        self.xor_gate.exec(self.a, self.b);
+        self.difference = self.xor_gate.output;
+
+        self.not_gate.exec(self.a, false); // not only takes a single value
+        self.and_gate.exec(self.not_gate.output, self.b);
+        self.borrow = self.and_gate.output;
+
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct FullSubtractor {
+    pub a: bool,
+    pub b: bool,
+    pub difference: bool,
+    pub borrow_in: bool,
+    pub borrow_out: bool,
+    half_subtractor_a: HalfSubtractor,
+    half_subtractor_b: HalfSubtractor,
+    or_gate: Gate,
+}
+
+impl FullSubtractor {
+    // initialize with inputs low
+    pub fn new() -> Self {
+        Self {
+            a: false,
+            b: false,
+            difference: false,
+            borrow_in: false,
+            borrow_out: false,
+            half_subtractor_a: HalfSubtractor::new(),
+            half_subtractor_b: HalfSubtractor::new(),
+            or_gate: Gate::new(Logic::OR),
+        }
+    }
+
+    pub fn exec(&mut self) {
+        // add the primary bits
+        self.half_subtractor_a.a = self.a;
+        self.half_subtractor_a.b = self.b;
+        self.half_subtractor_a.exec();
+
+        // add the difference from above to the carried in bit
+        self.half_subtractor_b.a = self.half_subtractor_a.difference;
+        self.half_subtractor_b.b = self.borrow_in;
+        self.half_subtractor_b.exec();
+
+        // the difference bit is the result of the above adder
+        self.difference = self.half_subtractor_b.difference;
+
+        // the borrow out bit is an OR of the first or second carry bits
+        self.or_gate
+            .exec(self.half_subtractor_a.borrow, self.half_subtractor_b.borrow);
+        self.borrow_out = self.or_gate.output;
+
+    }
+}
+
+#[derive(Debug)]
+pub struct RippleBorrowSubtractor {
+    pub a: Vec<bool>,
+    pub b: Vec<bool>,
+    pub full_subtractors: Vec<FullSubtractor>,
+    pub output: Vec<bool>,
+}
+
+impl RippleBorrowSubtractor {
+    pub fn new(size: usize) -> Self {
+        Self {
+            a: vec![false; size],
+            b: vec![false; size],
+            full_subtractors: vec![FullSubtractor::new(); size],
+            output: vec![false; size],
+        }
+    }
+
+    pub fn exec(&mut self) {
+        self.output = vec![];
+        let mut pairs = self.a.iter().zip(self.b.iter());
+        let mut carry = false;
+
+        for subtractor in self.full_subtractors.iter_mut() {
+            if let Some((a_bit, b_bit)) = pairs.next() {
+                subtractor.borrow_in = carry;
+                subtractor.a = *a_bit;
+                subtractor.b = *b_bit;
+                subtractor.exec();
+                self.output.push(subtractor.difference);
+                carry = subtractor.borrow_out;
+            }
+        }
+    }
+}
